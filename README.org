@@ -1,5 +1,5 @@
 * cl-jack-transport
-*** Orm Finnendahl <orm.finnendahl@selma.hfmdk-frankfurt.de>
+*** Orm Finnendahl
 
     [[https://jackaudio.org/api/index.html][jacktransport]] client for common lisp.
 
@@ -16,8 +16,8 @@
 
    - Start jackd (e.g. using qjackctl)
    
-   - load from lisp with =(ql:quickload "cl-jacktransport")= or
-     =(asdf:operate 'asdf:load-op "cl-jacktransport")=
+   - load from lisp with =(ql:quickload "cl-jack-transport")= or
+     =(asdf:operate 'asdf:load-op "cl-jack-transport")=
 
    - in the REPL:
 
