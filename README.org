@@ -1,7 +1,7 @@
 * cl-jack-transport
-*** Orm Finnendahl
+** [[https://jackaudio.org/api/transport-design.html][jacktransport]] client for Common Lisp.
 
-    [[https://jackaudio.org/api/transport-design.html][jacktransport]] client for common lisp.
+   (c) Orm Finnendahl 2023-
 
 ** License
 
