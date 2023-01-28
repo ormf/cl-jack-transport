@@ -1,0 +1,42 @@
+* cl-jack-transport
+*** Orm Finnendahl <orm.finnendahl@selma.hfmdk-frankfurt.de>
+
+    [[https://jackaudio.org/api/index.html][jacktransport]] client for common lisp.
+
+** License
+
+   gpl 2.0 or later
+
+** Usage
+
+   - Put the cl-jack-transport folder into a location seen by asdf2 or
+     quicklisp (e.g. ~/quicklisp/local-projects/)
+
+   - Start Common Lisp
+
+   - Start jackd (e.g. using qjackctl)
+   
+   - load from lisp with =(ql:quickload "cl-jacktransport")= or
+     =(asdf:operate 'asdf:load-op "cl-jacktransport")=
+
+   - in the REPL:
+
+#+BEGIN_SRC lisp
+
+  CL-USER> (in-package :jack-connect)
+
+  #<package "JACK-TRANSPORT">
+  jack-transport> (jacktransport-connect)
+  connecting jacktransport...done.
+  ; No value
+  jack-transport> (jacktransport-locate 30)
+  30
+  jack-transport> (jacktransport-get-position)
+  30
+  jack-transport> (jacktransport-disconnect)
+  disconnecting jacktransport...done.
+  ; No value
+  jack-transport> 
+#+END_SRC
+
+   For a more detailed description see examples.lisp.
