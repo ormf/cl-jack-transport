@@ -45,15 +45,15 @@
   (setf (getf *transport-responder-fns* responder) fn))
 
 (defun signal-sync ()
-  "signal the sync thread to call the sync-fn."
+  "signal the sync thread to call the sync responder."
   (bt:condition-notify *sync-signal*))
 
 (defun signal-start ()
-  "signal the sync thread to call the sync-fn."
+  "signal the sync thread to call the start responder."
   (bt:condition-notify *start-signal*))
 
 (defun signal-stop ()
-  "signal the sync thread to call the sync-fn."
+  "signal the sync thread to call the stop responder."
   (bt:condition-notify *stop-signal*))
 
 (defun make-sync-thread ()
