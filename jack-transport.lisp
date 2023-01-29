@@ -63,7 +63,7 @@
 (defun locate (time)
   "locate jacktransport to time in secs."
   (ensure-jacktransport-connected
-    (jack-transport-locate *transport-client* (* time (jack-get-frame-rate)))
+    (jack-transport-locate *transport-client* (round (* time (get-frame-rate))))
     time))
 
 (defun get-position ()
