@@ -47,6 +47,34 @@
 (jack-transport:set-transport-responder
  :sync
  (lambda ()
-   (format t "~&syncing to ~,3fs ..." (get-position))
-   (sleep 2.5) ;;; do something to sync up
+   (format t "~&syncing to ~,3fs ..." (jack-transport:get-position))
+   (sleep 5) ;;; do something to sync up
    (format t "done!")))
+
+;;; there are some utility functions:
+
+(jack-transport:locate 10)
+
+(jack-transport:get-position)
+
+(jack-transport:start)
+
+(jack-transport:stop)
+
+(jack-transport:transport-state)
+
+(jack-transport:get-frame-rate)
+
+;;; any other function of the jack API can also be called directly
+;;; using the cffi calling conventions (e.g. replace underscore
+;;; characters with hyphens). The current jack client is stored in the
+;;; var jack-transport::*transport-client*.
+
+;;; Example setting the sync timeout:
+
+(let* ((timeout-ptr (cffi:foreign-alloc :uint64)))
+  (setf (cffi:mem-aref timeout-ptr :uint64) 10)
+  (jack-transport::jack-set-sync-timeout
+   jack-transport::*transport-client*
+   timeout-ptr)
+  (cffi:foreign-free timeout-ptr))
