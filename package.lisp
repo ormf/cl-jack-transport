@@ -1,7 +1,19 @@
 ;;;; package.lisp
 
 (defpackage #:jack-transport
-  (:use #:cl #:cffi))
+  (:use #:cl #:cffi)
+  (:export
+   #:CONNECT
+   #:DISCONNECT
+   #:RECONNECT
+   #:LOCATE
+   #:GET-POSITION
+   #:START
+   #:STOP
+   #:TRANSPORT-STATE
+   #:GET-FRAME-RATE
+   #:SET-TRANSPORT-RESPONDER
+   ))
 
 (in-package :jack-transport)
 

@@ -18,6 +18,35 @@
 ;;;
 ;;; **********************************************************************
 
-(in-package :jack-transport)
+(in-package :cl-user)
 
 ;;; usage examples
+
+;;; connect to jack:
+(jack-transport:connect)
+
+;;; set responders for the transport state change situations:
+
+(jack-transport:set-transport-responder
+ :start
+ (lambda ()
+   (format t "~&start!")))
+
+(jack-transport:set-transport-responder
+ :stop
+ (lambda ()
+   (format t "~&stop!")
+   ))
+
+;;; sync is called whenever the transport position has been changed.
+;;; Be aware that sync is not only called after relocation of
+;;; jacktransport, but also every time when starting, so it might be a
+;;; good idea to check for the internal position of the app and jack's
+;;; position when starting to avoid unnecessary multiple relocations.
+
+(jack-transport:set-transport-responder
+ :sync
+ (lambda ()
+   (format t "~&syncing to ~,3fs ..." (get-position))
+   (sleep 2.5) ;;; do something to sync up
+   (format t "done!")))

@@ -41,90 +41,53 @@
   `(if (not *transport-client*) (progn ,@body)
        (warn "jacktransport: already connected. Disconnect first with (jacktransport-disconnect).")))
 
-
-
-(defun jacktransport-disconnect ()
+(defun disconnect ()
   "disconnect jacktransport from jack."
   (ensure-jacktransport-connected
     (format t "~&disconnecting jacktransport...")
     (jack-deactivate *transport-client*)
     (jack-client-close *transport-client*)
+    (destroy-all-threads)
     (if *transport-position* (foreign-free *transport-position*))
     (setf *transport-client* nil)
     (setf *transport-position* nil)
     (format t "done.")
     (values)))
 
-
-
-(defun jack-get-frame-rate ()
+(defun get-frame-rate ()
+  "obtain jack's current sample-rate."
   (ensure-jacktransport-connected
     (jack-transport-query *transport-client* *transport-position*)
     (foreign-slot-value *transport-position* '(:struct jack-position) 'frame-rate)))
 
-(defun jacktransport-locate (time)
+(defun locate (time)
   "locate jacktransport to time in secs."
   (ensure-jacktransport-connected
     (jack-transport-locate *transport-client* (* time (jack-get-frame-rate)))
     time))
 
-(defun jacktransport-get-position ()
+(defun get-position ()
   "get jacktransport position in secs."
   (ensure-jacktransport-connected
     (jack-transport-query *transport-client* *transport-position*)
     (let* ((frame-rate (foreign-slot-value *transport-position* '(:struct jack-position) 'frame-rate)))
       (/ (jack-get-current-transport-frame *transport-client*) frame-rate))))
 
-(defun jacktransport-start ()
+(defun start ()
   "start jacktransport."
   (ensure-jacktransport-connected
     (jack-transport-start *transport-client*)))
 
-(defun jacktransport-stop ()
+(defun stop ()
   "stop jacktransport."
   (ensure-jacktransport-connected
     (jack-transport-stop *transport-client*)))
 
-(defcallback jacktransport-sync-callback :int
-    ((state jack-transport-state-t)
-     (pos (:pointer (:struct jack-position)))
-     (arg (:pointer :void)))
-  (declare (ignore state pos arg)))
+(defun transport-state ()
+  "get the current transport state as a keyword."
+    (aref *transport-states* (jack-transport-query *transport-client* *transport-position*)))
 
-(defparameter *test* nil)
-
-(defcstruct ftest1
-  (a :float)
-  (b :int)
-  (c :int))
-
-(setf *test* (foreign-alloc '(:struct ftest1)))
-
-(defcallback jacktransport-process-callback :int
-    ((nframes jack-nframes-t)
-     (arg (:pointer :void)))
-  (declare (ignore nframes))
-  (with-foreign-slots ((a b c) arg (:struct ftest1))
-    (setf a 42.0 b 42 c 42)))
-
-
-
-(with-foreign-slots ((a b c) *test* (:struct ftest1))
-  (setf a 10.5 b 10 c 12)
-  (print a)
-  (print b)
-  (print c)
-  :yay)
-
-(with-foreign-slots ((a b c) *test* (:struct ftest1))
-  (list a b c))
-
-(defcallback shutdown-callback :void
-    ((arg (:pointer :void)))
-  (declare (ignore arg))
-  (jacktransport-disconnect))
-
-(defun jacktransport-connect ()
+(defun connect ()
   "connect jacktransport to jack."
   (ensure-jacktransport-disconnected
     (format t "~&connecting jacktransport...")
@@ -134,23 +97,26 @@
             (progn
               (setf *transport-position* (foreign-alloc '(:struct jack-position)))
               (setf *transport-client* result)
-              (jack-activate *transport-client*)
+              (make-sync-thread)
+              (make-transport-thread)
               (jack-set-process-callback
                *transport-client*
                (callback jacktransport-process-callback)
-               *test*)
-              (jack-on-shutdown
-               *transport-client*
-               (callback shutdown-callback)
                (cffi:null-pointer))
+              (jack-set-sync-callback
+               *transport-client*
+               (callback jacktransport-sync-callback)
+               (cffi:null-pointer)) ;;; could submit a foreign pointer here!
+              ;; (jack-on-shutdown
+              ;;  *transport-client*
+              ;;  (callback jacktransport-shutdown-callback)
+              ;;  (cffi:null-pointer))
+              (jack-activate *transport-client*)
               (format t "done.")
               (values))
             (warn "couldn't create a jack client (~d)!" (mem-aref status :int)))))))
 
-;;; (jacktransport-connect)
-;;; (jacktransport-locate 30)
-;;; (jacktransport-locate 0)
-;;; (jacktransport-get-position)
-;;; (jacktransport-start)
-;;; (jacktransport-stop)
-;;; (jacktransport-disconnect)
+(defun reconnect ()
+  "connect jacktransport to jack."
+  (disconnect)
+  (connect))
