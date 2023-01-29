@@ -76,8 +76,12 @@
                          (funcall (getf *transport-responder-fns* :stop)))))))))
 
 (defun destroy-all-threads ()
-  (if *sync-thread* (bt:destroy-thread *sync-thread*))
-  (if *transport-thread* (bt:destroy-thread *transport-thread*)))
+  (when *sync-thread*
+    (bt:destroy-thread *sync-thread*)
+    (setf *sync-thread* nil))
+  (when *transport-thread*
+    (bt:destroy-thread *transport-thread*)
+    (setf *transport-thread* nil)))
 
 (defcallback jacktransport-shutdown-callback :void
     ((arg (:pointer :void)))
