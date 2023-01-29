@@ -48,7 +48,7 @@
  :sync
  (lambda ()
    (format t "~&syncing to ~,3fs ..." (jack-transport:get-position))
-   (sleep 5) ;;; do something to sync up
+   (sleep 0) ;;; do something to sync up
    (format t "done!")))
 
 ;;; there are some utility functions:
@@ -73,8 +73,10 @@
 ;;; Example setting the sync timeout:
 
 (let* ((timeout-ptr (cffi:foreign-alloc :uint64)))
-  (setf (cffi:mem-aref timeout-ptr :uint64) 10)
-  (jack-transport::jack-set-sync-timeout
-   jack-transport::*transport-client*
-   timeout-ptr)
-  (cffi:foreign-free timeout-ptr))
+  (setf (cffi:mem-aref timeout-ptr :uint64 0) 1)
+  (let ((result
+          (jack-transport::jack-set-sync-timeout
+           jack-transport::*transport-client*
+           timeout-ptr)))
+    (cffi:foreign-free timeout-ptr)
+    result))

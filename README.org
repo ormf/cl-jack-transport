@@ -20,24 +20,95 @@
    - load from lisp with =(ql:quickload "cl-jack-transport")= or
      =(asdf:operate 'asdf:load-op "cl-jack-transport")=
 
-   - in the REPL:
+** Examples
+
+   Evaluate the following code in the REPL or from a file
+
+*** Connect to JACK
 
 #+BEGIN_SRC lisp
 
-  CL-USER> (in-package :jack-connect)
+  (jack-transport:connect)
 
-  #<package "JACK-TRANSPORT">
-  jack-transport> (jacktransport-connect)
-  connecting jacktransport...done.
-  ; No value
-  jack-transport> (jacktransport-locate 30)
-  30
-  jack-transport> (jacktransport-get-position)
-  30
-  jack-transport> (jacktransport-disconnect)
-  disconnecting jacktransport...done.
-  ; No value
-  jack-transport> 
 #+END_SRC
 
-   For a more detailed description see examples.lisp.
+*** Setting responders for transport state change situations
+
+    All responders are executed in their own thread to ensure realtime
+    stability of jack.
+
+#+BEGIN_SRC lisp
+
+  (jack-transport:set-transport-responder
+   :start
+   (lambda ()
+     (format t "~&start!") ;;; put code here to be executed on start
+   ))
+
+  (jack-transport:set-transport-responder
+   :stop
+   (lambda ()
+     (format t "~&stop!") ;;; put code here to be executed on stop
+     ))
+
+#+END_SRC
+
+   The sync responder is called whenever the transport position has
+   been changed. Be aware that sync is not only called after
+   relocation of jacktransport, but also every time when starting, so
+   it might be a good idea to check for the internal position of the
+   app and jack's position when starting to avoid unnecessary multiple
+   relocations.
+
+#+BEGIN_SRC lisp
+
+  (jack-transport:set-transport-responder
+   :sync
+   (lambda ()
+     (format t "~&syncing to ~,3fs ..." (jack-transport:get-position))
+     (sleep 0) ;;; do something to sync up
+     (format t "done!")))
+
+#+END_SRC
+
+*** Utility functions:
+
+#+BEGIN_SRC lisp
+
+  (jack-transport:locate 10)
+
+  (jack-transport:get-position)
+
+  (jack-transport:start)
+
+  (jack-transport:stop)
+
+  (jack-transport:transport-state)
+
+  (jack-transport:get-frame-rate)
+
+#+END_SRC
+
+*** JACK API functions
+    
+   Any function of the jack API can also be called directly using the
+   cffi calling conventions (e.g. replace underscore characters with
+   hyphens). The current jack client is stored in the var
+   jack-transport::*transport-client*.
+
+#+BEGIN_SRC lisp
+
+;;; Example setting the sync timeout:
+
+  (let* ((timeout-ptr (cffi:foreign-alloc :uint64)))
+    (setf (cffi:mem-aref timeout-ptr :uint64 0) 1)
+    (let ((result
+            (jack-transport::jack-set-sync-timeout
+             jack-transport::*transport-client*
+             timeout-ptr)))
+      (cffi:foreign-free timeout-ptr)
+      result))
+
+#+END_SRC
+
+   The above examples are in the file examples.lisp.
